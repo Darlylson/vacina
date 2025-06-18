@@ -1,72 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Carteira de Vacinação</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f0f0f0; padding: 1rem; }
+    .card { background: #fff; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    label { display: block; margin-top: 0.5rem; }
+    input, select, button { width: 100%; padding: 0.5rem; margin-top: 0.25rem; border: 1px solid #ccc; border-radius: 4px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th, td { padding: 0.5rem; border: 1px solid #ccc; }
+    .btn-exportar { background: #4CAF50; color: white; }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h2>Selecionar Paciente</h2>
+    <label>Paciente:
+      <select id="paciente-select" onchange="preencherPaciente()">
+        <option value="">-- Selecione --</option>
+        <option value="Darlylson do Socorro Brito dos Santos">Darlylson do Socorro Brito dos Santos</option>
+        <option value="Daniel Souza dos Santos">Daniel Souza dos Santos</option>
+      </select>
+    </label>
+    <label>Nome:<input type="text" id="nome" readonly></label>
+    <label>Data de Nascimento:<input type="date" id="nascimento" readonly></label>
+  </div>
+
+  <div class="card">
+    <h2>Registrar Vacina</h2>
+    <label>Vacina:<input type="text" id="vacina"></label>
+    <label>Data:<input type="date" id="data"></label>
+    <label>Lote:<input type="text" id="lote"></label>
+    <label>Profissional:<input type="text" id="profissional"></label>
+    <button onclick="adicionarRegistro()">Salvar Registro</button>
+  </div>
+
+  <div class="card">
+    <h2>Registros</h2>
+    <table id="tabela">
+      <thead>
+        <tr>
+          <th>Paciente</th><th>Vacina</th><th>Data</th><th>Lote</th><th>Profissional</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <button class="btn-exportar" onclick="exportarJSON()">Exportar Registros</button>
+  </div>
+
 <script>
-  const tabela = document.querySelector("#tabela tbody");
   const pacientes = {
     "Darlylson do Socorro Brito dos Santos": "1972-12-07",
     "Daniel Souza dos Santos": "2014-02-28"
   };
 
+  const LS_KEY = "registrosVacina";
+
   function preencherPaciente() {
-    const select = document.getElementById("paciente-select");
-    const nome = select.value;
+    const nome = document.getElementById("paciente-select").value;
     document.getElementById("nome").value = nome;
     document.getElementById("nascimento").value = pacientes[nome] || "";
-    renderizarTabela();
   }
 
-  function carregarDados() {
-    return JSON.parse(localStorage.getItem("vacinas")) || [];
-  }
+  function adicionarRegistro() {
+    const registro = {
+      nome: document.getElementById("nome").value,
+      nascimento: document.getElementById("nascimento").value,
+      vacina: document.getElementById("vacina").value,
+      data: document.getElementById("data").value,
+      lote: document.getElementById("lote").value,
+      profissional: document.getElementById("profissional").value
+    };
 
-  function salvarDados(dados) {
-    localStorage.setItem("vacinas", JSON.stringify(dados));
-  }
-
-  function adicionarVacina() {
-    const nome = document.getElementById("nome").value;
-    const nascimento = document.getElementById("nascimento").value;
-    const vacina = document.getElementById("vacina").value;
-    const data = document.getElementById("data").value;
-    const lote = document.getElementById("lote").value;
-    const profissional = document.getElementById("profissional").value;
-
-    if (nome && vacina && data && lote && profissional) {
-      const dados = carregarDados();
-      dados.push({ nome, nascimento, vacina, data, lote, profissional });
-      salvarDados(dados);
-      alert("Registro salvo com sucesso.");
-      document.getElementById("vacina").value = "";
-      document.getElementById("data").value = "";
-      document.getElementById("lote").value = "";
-      document.getElementById("profissional").value = "";
-      renderizarTabela();
-    } else {
+    if (!registro.nome || !registro.vacina || !registro.data || !registro.lote || !registro.profissional) {
       alert("Preencha todos os campos.");
-    }
-  }
-
-  function renderizarTabela() {
-    const dados = carregarDados();
-    const pacienteAtual = document.getElementById("nome").value;
-    tabela.innerHTML = "";
-
-    const filtrados = dados.filter(d => d.nome === pacienteAtual);
-
-    if (filtrados.length === 0) {
-      tabela.innerHTML = "<tr><td colspan='5'>Nenhum registro encontrado.</td></tr>";
       return;
     }
 
-    filtrados.forEach(item => {
-      const row = `<tr>
-        <td>${item.nome}</td>
-        <td>${item.vacina}</td>
-        <td>${item.data}</td>
-        <td>${item.lote}</td>
-        <td>${item.profissional}</td>
+    const registros = JSON.parse(localStorage.getItem(LS_KEY) || "[]");
+    registros.push(registro);
+    localStorage.setItem(LS_KEY, JSON.stringify(registros));
+    carregarTabela();
+    alert("Registro salvo localmente.");
+  }
+
+  function carregarTabela() {
+    const registros = JSON.parse(localStorage.getItem(LS_KEY) || "[]");
+    const tbody = document.querySelector("#tabela tbody");
+    tbody.innerHTML = "";
+    registros.forEach(reg => {
+      tbody.innerHTML += `<tr>
+        <td>${reg.nome}</td>
+        <td>${reg.vacina}</td>
+        <td>${reg.data}</td>
+        <td>${reg.lote}</td>
+        <td>${reg.profissional}</td>
       </tr>`;
-      tabela.innerHTML += row;
     });
   }
 
-  window.onload = renderizarTabela;
+  function exportarJSON() {
+    const registros = localStorage.getItem(LS_KEY) || "[]";
+    const blob = new Blob([registros], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "registros.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  window.onload = carregarTabela;
 </script>
+
+</body>
+</html>
