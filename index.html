@@ -60,9 +60,16 @@
   </header>
 
   <div class="card">
-    <h2>Dados do Paciente</h2>
-    <label>Nome:<input type="text" id="nome"></label>
-    <label>Data de Nascimento:<input type="date" id="nascimento"></label>
+    <h2>Selecionar Paciente</h2>
+    <label>Paciente:
+      <select id="paciente-select" onchange="preencherPaciente()">
+        <option value="">-- Selecione --</option>
+        <option value="Darlylson do Socorro Brito dos Santos">Darlylson do Socorro Brito dos Santos</option>
+        <option value="Daniel Souza dos Santos">Daniel Souza dos Santos</option>
+      </select>
+    </label>
+    <label>Nome:<input type="text" id="nome" readonly></label>
+    <label>Data de Nascimento:<input type="date" id="nascimento" readonly></label>
   </div>
 
   <div class="card">
@@ -79,6 +86,7 @@
     <table id="tabela">
       <thead>
         <tr>
+          <th>Paciente</th>
           <th>Vacina</th>
           <th>Data</th>
           <th>Lote</th>
@@ -92,6 +100,17 @@
 
   <script>
     const tabela = document.querySelector("#tabela tbody");
+    const pacientes = {
+      "Darlylson do Socorro Brito dos Santos": "1972-12-07",
+      "Daniel Souza dos Santos": "2014-02-28"
+    };
+
+    function preencherPaciente() {
+      const select = document.getElementById("paciente-select");
+      const nome = select.value;
+      document.getElementById("nome").value = nome;
+      document.getElementById("nascimento").value = pacientes[nome] || "";
+    }
 
     function salvarDados(dados) {
       localStorage.setItem("carteiraVacinas", JSON.stringify(dados));
@@ -106,6 +125,7 @@
       tabela.innerHTML = "";
       dados.forEach((item, index) => {
         const row = `<tr>
+          <td>${item.nome}</td>
           <td>${item.vacina}</td>
           <td>${item.data}</td>
           <td>${item.lote}</td>
@@ -116,17 +136,32 @@
       });
     }
 
-    function adicionarVacina() {
+    async function adicionarVacina() {
+      const nome = document.getElementById("nome").value;
+      const nascimento = document.getElementById("nascimento").value;
       const vacina = document.getElementById("vacina").value;
       const data = document.getElementById("data").value;
       const lote = document.getElementById("lote").value;
       const profissional = document.getElementById("profissional").value;
 
-      if (vacina && data && lote && profissional) {
+      if (nome && vacina && data && lote && profissional) {
         const dados = carregarDados();
-        dados.push({ vacina, data, lote, profissional });
+        const novo = { nome, nascimento, vacina, data, lote, profissional };
+        dados.push(novo);
         salvarDados(dados);
         renderizarTabela();
+
+        // Enviar dados para GitHub (simulado via webhook/backend no projeto existente)
+        try {
+          await fetch("https://darlylson.github.io/vacina/api/salvar.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(novo)
+          });
+        } catch (e) {
+          console.warn("Falha ao enviar para GitHub (API não disponível)", e);
+        }
+
         document.getElementById("vacina").value = "";
         document.getElementById("data").value = "";
         document.getElementById("lote").value = "";
@@ -147,4 +182,3 @@
   </script>
 </body>
 </html>
-
