@@ -3,54 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#4CAF50">
   <title>Carteira de Vacinação</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 1rem;
-      margin: 0;
-      background-color: #f2f2f2;
-    }
-    header {
-      text-align: center;
-      margin-bottom: 1rem;
-    }
-    h1 {
-      color: #2e7d32;
-    }
-    .card {
-      background-color: #fff;
-      border-radius: 8px;
-      padding: 1rem;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      margin-bottom: 1rem;
-    }
-    label {
-      display: block;
-      margin-top: 0.5rem;
-    }
-    input, button, select {
-      width: 100%;
-      padding: 0.5rem;
-      margin-top: 0.25rem;
-      border-radius: 4px;
-      border: 1px solid #ccc;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 1rem;
-    }
-    th, td {
-      padding: 0.5rem;
-      border: 1px solid #ccc;
-      text-align: left;
-    }
-    .btn-remove {
-      color: red;
-      cursor: pointer;
-    }
+    body { font-family: Arial, sans-serif; margin: 0; padding: 1rem; background: #f2f2f2; }
+    header { text-align: center; margin-bottom: 1rem; }
+    .card { background: #fff; padding: 1rem; margin-bottom: 1rem; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    label { display: block; margin-top: 0.5rem; }
+    input, select, button { width: 100%; padding: 0.5rem; margin-top: 0.25rem; border: 1px solid #ccc; border-radius: 4px; }
+    table { width: 100%; margin-top: 1rem; border-collapse: collapse; }
+    th, td { padding: 0.5rem; border: 1px solid #ccc; text-align: left; }
   </style>
 </head>
 <body>
@@ -81,7 +42,7 @@
   </div>
 
   <div class="card">
-    <h2>Vacinas Aplicadas (Remoto)</h2>
+    <h2>Vacinas Registradas</h2>
     <table id="tabela">
       <thead>
         <tr>
@@ -97,71 +58,67 @@
   </div>
 
   <script>
-    const tabela = document.querySelector("#tabela tbody");
     const pacientes = {
       "Darlylson do Socorro Brito dos Santos": "1972-12-07",
       "Daniel Souza dos Santos": "2014-02-28"
     };
 
     function preencherPaciente() {
-      const select = document.getElementById("paciente-select");
-      const nome = select.value;
+      const nome = document.getElementById("paciente-select").value;
       document.getElementById("nome").value = nome;
       document.getElementById("nascimento").value = pacientes[nome] || "";
     }
 
-    async function carregarRemoto() {
+    async function carregarRegistros() {
       try {
-        const res = await fetch("https://darlylson.github.io/vacina/registros.json");
+        const res = await fetch("registros.json");
         const dados = await res.json();
-        tabela.innerHTML = "";
-        dados.forEach(item => {
-          const row = `<tr>
-            <td>${item.nome}</td>
-            <td>${item.vacina}</td>
-            <td>${item.data}</td>
-            <td>${item.lote}</td>
-            <td>${item.profissional}</td>
+        const tbody = document.querySelector("#tabela tbody");
+        tbody.innerHTML = "";
+        dados.forEach(reg => {
+          tbody.innerHTML += `<tr>
+            <td>${reg.nome}</td>
+            <td>${reg.vacina}</td>
+            <td>${reg.data}</td>
+            <td>${reg.lote}</td>
+            <td>${reg.profissional}</td>
           </tr>`;
-          tabela.innerHTML += row;
         });
       } catch (e) {
-        tabela.innerHTML = '<tr><td colspan="5">Erro ao carregar dados remotos.</td></tr>';
+        console.error("Erro ao carregar registros:", e);
       }
     }
 
     async function adicionarVacina() {
-      const nome = document.getElementById("nome").value;
-      const nascimento = document.getElementById("nascimento").value;
-      const vacina = document.getElementById("vacina").value;
-      const data = document.getElementById("data").value;
-      const lote = document.getElementById("lote").value;
-      const profissional = document.getElementById("profissional").value;
+      const registro = {
+        nome: document.getElementById("nome").value,
+        nascimento: document.getElementById("nascimento").value,
+        vacina: document.getElementById("vacina").value,
+        data: document.getElementById("data").value,
+        lote: document.getElementById("lote").value,
+        profissional: document.getElementById("profissional").value,
+      };
 
-      if (nome && vacina && data && lote && profissional) {
-        const novo = { nome, nascimento, vacina, data, lote, profissional };
+      if (!registro.nome || !registro.vacina || !registro.data || !registro.lote || !registro.profissional) {
+        alert("Preencha todos os campos!");
+        return;
+      }
 
-        try {
-          const res = await fetch("https://SEU_BACKEND/salvar.php", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(novo)
-          });
-          if (res.ok) {
-            alert("Registro salvo com sucesso.");
-            carregarRemoto();
-          } else {
-            alert("Erro ao salvar os dados.");
-          }
-        } catch (e) {
-          alert("Erro ao conectar com o servidor.");
-        }
+      const res = await fetch("salvar.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(registro)
+      });
+
+      if (res.ok) {
+        alert("Registro salvo com sucesso!");
+        carregarRegistros();
       } else {
-        alert("Preencha todos os campos.");
+        alert("Erro ao salvar.");
       }
     }
 
-    window.onload = carregarRemoto;
+    window.onload = carregarRegistros;
   </script>
 </body>
 </html>
