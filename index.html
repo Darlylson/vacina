@@ -2,119 +2,308 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Carteira de Vacinação</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Carteira Digital de Vacinação</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    body { font-family: Arial, sans-serif; background: #f0f0f0; padding: 1rem; }
-    .card { background: #fff; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    label { display: block; margin-top: 0.5rem; }
-    input, select, button { width: 100%; padding: 0.5rem; margin-top: 0.25rem; border: 1px solid #ccc; border-radius: 4px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-    th, td { padding: 0.5rem; border: 1px solid #ccc; }
-    .btn-exportar { background: #4CAF50; color: white; }
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+    
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #f8fafc;
+    }
+    
+    .fade-in {
+      animation: fadeIn 0.3s ease-in-out;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 1000;
+      transition: all 0.3s ease;
+    }
+    
+    .vaccine-card {
+      transition: all 0.2s ease;
+    }
+    
+    .vaccine-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
   </style>
 </head>
-<body>
+<body class="min-h-screen bg-gray-50">
+  <div class="container mx-auto px-4 py-8 max-w-6xl">
+    <!-- Header -->
+    <header class="mb-8 text-center">
+      <div class="flex items-center justify-center mb-4">
+        <i class="fas fa-syringe text-blue-500 text-4xl mr-3"></i>
+        <h1 class="text-3xl font-bold text-gray-800">Carteira Digital de Vacinação</h1>
+      </div>
+      <p class="text-gray-600">Registro completo e seguro das vacinas aplicadas</p>
+    </header>
 
-  <div class="card">
-    <h2>Selecionar Paciente</h2>
-    <label>Paciente:
-      <select id="paciente-select" onchange="preencherPaciente()">
-        <option value="">-- Selecione --</option>
-        <option value="Darlylson do Socorro Brito dos Santos">Darlylson do Socorro Brito dos Santos</option>
-        <option value="Daniel Souza dos Santos">Daniel Souza dos Santos</option>
-      </select>
-    </label>
-    <label>Nome:<input type="text" id="nome" readonly></label>
-    <label>Data de Nascimento:<input type="date" id="nascimento" readonly></label>
+    <!-- Patient Selection Card -->
+    <div class="bg-white rounded-xl shadow-md p-6 mb-8 fade-in">
+      <div class="flex items-center mb-4">
+        <i class="fas fa-user-circle text-blue-500 text-xl mr-2"></i>
+        <h2 class="text-xl font-semibold text-gray-800">Selecionar Paciente</h2>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Paciente</label>
+          <select id="paciente-select" onchange="preencherPaciente()" 
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+            <option value="">-- Selecione --</option>
+            <option value="Darlylson do Socorro Brito dos Santos">Darlylson do Socorro Brito dos Santos</option>
+            <option value="Daniel Souza dos Santos">Daniel Souza dos Santos</option>
+          </select>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Nome</label>
+          <input type="text" id="nome" readonly 
+                 class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100">
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Data de Nascimento</label>
+          <input type="date" id="nascimento" readonly 
+                 class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100">
+        </div>
+      </div>
+    </div>
+
+    <!-- Vaccine Registration Card -->
+    <div class="bg-white rounded-xl shadow-md p-6 mb-8 fade-in" id="vaccine-form">
+      <div class="flex items-center mb-4">
+        <i class="fas fa-plus-circle text-blue-500 text-xl mr-2"></i>
+        <h2 class="text-xl font-semibold text-gray-800">Registrar Nova Vacina</h2>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Vacina</label>
+          <input type="text" id="vacina" placeholder="Ex: Febre Amarela"
+                 class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Data</label>
+          <input type="date" id="data"
+                 class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Lote</label>
+          <input type="text" id="lote" placeholder="Número do lote"
+                 class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Profissional</label>
+          <input type="text" id="profissional" placeholder="Nome do profissional"
+                 class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+        </div>
+      </div>
+      
+      <div class="flex justify-end">
+        <button onclick="adicionarRegistro()" 
+                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+          <i class="fas fa-save mr-2"></i>Salvar Registro
+        </button>
+      </div>
+    </div>
+
+    <!-- Vaccine Records Card -->
+    <div class="bg-white rounded-xl shadow-md p-6 fade-in">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center">
+          <i class="fas fa-history text-blue-500 text-xl mr-2"></i>
+          <h2 class="text-xl font-semibold text-gray-800">Histórico de Vacinação</h2>
+        </div>
+        <div>
+          <button onclick="exportarJSON()" 
+                  class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors">
+            <i class="fas fa-file-export mr-2"></i>Exportar
+          </button>
+        </div>
+      </div>
+      
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paciente</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vacina</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lote</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Profissional</th>
+            </tr>
+          </thead>
+          <tbody id="tabela" class="bg-white divide-y divide-gray-200">
+            <!-- Records will be inserted here -->
+          </tbody>
+        </table>
+      </div>
+      
+      <div id="empty-state" class="text-center py-12 hidden">
+        <i class="fas fa-clipboard-list text-gray-400 text-5xl mb-4"></i>
+        <h3 class="text-lg font-medium text-gray-900">Nenhum registro encontrado</h3>
+        <p class="mt-1 text-sm text-gray-500">Adicione seu primeiro registro de vacinação usando o formulário acima.</p>
+      </div>
+    </div>
   </div>
 
-  <div class="card">
-    <h2>Registrar Vacina</h2>
-    <label>Vacina:<input type="text" id="vacina"></label>
-    <label>Data:<input type="date" id="data"></label>
-    <label>Lote:<input type="text" id="lote"></label>
-    <label>Profissional:<input type="text" id="profissional"></label>
-    <button onclick="adicionarRegistro()">Salvar Registro</button>
+  <!-- Toast Notification -->
+  <div id="toast" class="toast hidden">
+    <div class="bg-green-500 text-white px-4 py-3 rounded-md shadow-lg">
+      <div class="flex items-center">
+        <i class="fas fa-check-circle mr-2"></i>
+        <span id="toast-message">Registro salvo com sucesso!</span>
+      </div>
+    </div>
   </div>
 
-  <div class="card">
-    <h2>Registros</h2>
-    <table id="tabela">
-      <thead>
-        <tr>
-          <th>Paciente</th><th>Vacina</th><th>Data</th><th>Lote</th><th>Profissional</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-    <button class="btn-exportar" onclick="exportarJSON()">Exportar Registros</button>
-  </div>
-
-<script>
-  const pacientes = {
-    "Darlylson do Socorro Brito dos Santos": "1972-12-07",
-    "Daniel Souza dos Santos": "2014-02-28"
-  };
-
-  const LS_KEY = "registrosVacina";
-
-  function preencherPaciente() {
-    const nome = document.getElementById("paciente-select").value;
-    document.getElementById("nome").value = nome;
-    document.getElementById("nascimento").value = pacientes[nome] || "";
-  }
-
-  function adicionarRegistro() {
-    const registro = {
-      nome: document.getElementById("nome").value,
-      nascimento: document.getElementById("nascimento").value,
-      vacina: document.getElementById("vacina").value,
-      data: document.getElementById("data").value,
-      lote: document.getElementById("lote").value,
-      profissional: document.getElementById("profissional").value
+  <script>
+    const pacientes = {
+      "Darlylson do Socorro Brito dos Santos": "1972-12-07",
+      "Daniel Souza dos Santos": "2014-02-28"
     };
 
-    if (!registro.nome || !registro.vacina || !registro.data || !registro.lote || !registro.profissional) {
-      alert("Preencha todos os campos.");
-      return;
+    const LS_KEY = "registrosVacina";
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      const toastMessage = document.getElementById('toast-message');
+      
+      toastMessage.textContent = message;
+      toast.classList.remove('hidden');
+      
+      setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 3000);
     }
 
-    const registros = JSON.parse(localStorage.getItem(LS_KEY) || "[]");
-    registros.push(registro);
-    localStorage.setItem(LS_KEY, JSON.stringify(registros));
-    carregarTabela();
-    alert("Registro salvo localmente.");
-  }
+    function preencherPaciente() {
+      const nome = document.getElementById("paciente-select").value;
+      document.getElementById("nome").value = nome;
+      document.getElementById("nascimento").value = pacientes[nome] || "";
+      
+      // Highlight the vaccine form when patient is selected
+      if (nome) {
+        document.getElementById('vaccine-form').classList.add('ring-2', 'ring-blue-500');
+        setTimeout(() => {
+          document.getElementById('vaccine-form').classList.remove('ring-2', 'ring-blue-500');
+        }, 1000);
+      }
+    }
 
-  function carregarTabela() {
-    const registros = JSON.parse(localStorage.getItem(LS_KEY) || "[]");
-    const tbody = document.querySelector("#tabela tbody");
-    tbody.innerHTML = "";
-    registros.forEach(reg => {
-      tbody.innerHTML += `<tr>
-        <td>${reg.nome}</td>
-        <td>${reg.vacina}</td>
-        <td>${reg.data}</td>
-        <td>${reg.lote}</td>
-        <td>${reg.profissional}</td>
-      </tr>`;
-    });
-  }
+    function adicionarRegistro() {
+      const registro = {
+        nome: document.getElementById("nome").value,
+        nascimento: document.getElementById("nascimento").value,
+        vacina: document.getElementById("vacina").value,
+        data: document.getElementById("data").value,
+        lote: document.getElementById("lote").value,
+        profissional: document.getElementById("profissional").value
+      };
 
-  function exportarJSON() {
-    const registros = localStorage.getItem(LS_KEY) || "[]";
-    const blob = new Blob([registros], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "registros.json";
-    a.click();
-    URL.revokeObjectURL(url);
-  }
+      if (!registro.nome) {
+        showToast("Selecione um paciente primeiro");
+        document.getElementById('paciente-select').focus();
+        return;
+      }
 
-  window.onload = carregarTabela;
-</script>
+      if (!registro.vacina || !registro.data || !registro.lote || !registro.profissional) {
+        showToast("Preencha todos os campos");
+        return;
+      }
 
+      const registros = JSON.parse(localStorage.getItem(LS_KEY) || "[]");
+      registros.push(registro);
+      localStorage.setItem(LS_KEY, JSON.stringify(registros));
+      
+      // Clear form fields except patient info
+      document.getElementById("vacina").value = "";
+      document.getElementById("data").value = "";
+      document.getElementById("lote").value = "";
+      document.getElementById("profissional").value = "";
+      
+      carregarTabela();
+      showToast("Registro salvo com sucesso!");
+    }
+
+    function carregarTabela() {
+      const registros = JSON.parse(localStorage.getItem(LS_KEY) || "[]");
+      const tbody = document.querySelector("#tabela");
+      const emptyState = document.getElementById('empty-state');
+      
+      if (registros.length === 0) {
+        tbody.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+      }
+      
+      emptyState.classList.add('hidden');
+      
+      let html = '';
+      registros.forEach(reg => {
+        const dataFormatada = reg.data ? new Date(reg.data).toLocaleDateString('pt-BR') : '';
+        
+        html += `<tr class="vaccine-card hover:bg-gray-50">
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${reg.nome}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+              ${reg.vacina}
+            </span>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${dataFormatada}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${reg.lote}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${reg.profissional}</td>
+        </tr>`;
+      });
+      
+      tbody.innerHTML = html;
+    }
+
+    function exportarJSON() {
+      const registros = localStorage.getItem(LS_KEY) || "[]";
+      
+      if (registros === "[]") {
+        showToast("Nenhum registro para exportar");
+        return;
+      }
+      
+      const blob = new Blob([registros], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `registros-vacinacao-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      
+      showToast("Exportação realizada com sucesso!");
+    }
+
+    // Initialize
+    window.onload = function() {
+      carregarTabela();
+      
+      // Set today's date as default for vaccine date
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('data').value = today;
+    };
+  </script>
 </body>
 </html>
