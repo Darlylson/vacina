@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#4CAF50">
   <title>Carteira de Vacinação</title>
-  <link rel="manifest" href="manifest.json">
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -82,7 +81,7 @@
   </div>
 
   <div class="card">
-    <h2>Vacinas Aplicadas</h2>
+    <h2>Vacinas Aplicadas (Remoto)</h2>
     <table id="tabela">
       <thead>
         <tr>
@@ -91,7 +90,6 @@
           <th>Data</th>
           <th>Lote</th>
           <th>Profissional</th>
-          <th>Ação</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -112,28 +110,24 @@
       document.getElementById("nascimento").value = pacientes[nome] || "";
     }
 
-    function salvarDados(dados) {
-      localStorage.setItem("carteiraVacinas", JSON.stringify(dados));
-    }
-
-    function carregarDados() {
-      return JSON.parse(localStorage.getItem("carteiraVacinas")) || [];
-    }
-
-    function renderizarTabela() {
-      const dados = carregarDados();
-      tabela.innerHTML = "";
-      dados.forEach((item, index) => {
-        const row = `<tr>
-          <td>${item.nome}</td>
-          <td>${item.vacina}</td>
-          <td>${item.data}</td>
-          <td>${item.lote}</td>
-          <td>${item.profissional}</td>
-          <td><span class='btn-remove' onclick='remover(${index})'>Remover</span></td>
-        </tr>`;
-        tabela.innerHTML += row;
-      });
+    async function carregarRemoto() {
+      try {
+        const res = await fetch("https://darlylson.github.io/vacina/registros.json");
+        const dados = await res.json();
+        tabela.innerHTML = "";
+        dados.forEach(item => {
+          const row = `<tr>
+            <td>${item.nome}</td>
+            <td>${item.vacina}</td>
+            <td>${item.data}</td>
+            <td>${item.lote}</td>
+            <td>${item.profissional}</td>
+          </tr>`;
+          tabela.innerHTML += row;
+        });
+      } catch (e) {
+        tabela.innerHTML = '<tr><td colspan="5">Erro ao carregar dados remotos.</td></tr>';
+      }
     }
 
     async function adicionarVacina() {
@@ -145,40 +139,29 @@
       const profissional = document.getElementById("profissional").value;
 
       if (nome && vacina && data && lote && profissional) {
-        const dados = carregarDados();
         const novo = { nome, nascimento, vacina, data, lote, profissional };
-        dados.push(novo);
-        salvarDados(dados);
-        renderizarTabela();
 
-        // Enviar dados para GitHub (simulado via webhook/backend no projeto existente)
         try {
-          await fetch("https://darlylson.github.io/vacina/api/salvar.php", {
+          const res = await fetch("https://SEU_BACKEND/salvar.php", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(novo)
           });
+          if (res.ok) {
+            alert("Registro salvo com sucesso.");
+            carregarRemoto();
+          } else {
+            alert("Erro ao salvar os dados.");
+          }
         } catch (e) {
-          console.warn("Falha ao enviar para GitHub (API não disponível)", e);
+          alert("Erro ao conectar com o servidor.");
         }
-
-        document.getElementById("vacina").value = "";
-        document.getElementById("data").value = "";
-        document.getElementById("lote").value = "";
-        document.getElementById("profissional").value = "";
       } else {
         alert("Preencha todos os campos.");
       }
     }
 
-    function remover(index) {
-      const dados = carregarDados();
-      dados.splice(index, 1);
-      salvarDados(dados);
-      renderizarTabela();
-    }
-
-    window.onload = () => renderizarTabela();
+    window.onload = carregarRemoto;
   </script>
 </body>
 </html>
