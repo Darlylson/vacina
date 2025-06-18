@@ -1,124 +1,72 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Carteira de Vacinação</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 1rem; background: #f2f2f2; }
-    header { text-align: center; margin-bottom: 1rem; }
-    .card { background: #fff; padding: 1rem; margin-bottom: 1rem; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    label { display: block; margin-top: 0.5rem; }
-    input, select, button { width: 100%; padding: 0.5rem; margin-top: 0.25rem; border: 1px solid #ccc; border-radius: 4px; }
-    table { width: 100%; margin-top: 1rem; border-collapse: collapse; }
-    th, td { padding: 0.5rem; border: 1px solid #ccc; text-align: left; }
-  </style>
-</head>
-<body>
-  <header>
-    <h1>Carteira de Vacinação</h1>
-  </header>
+<script>
+  const tabela = document.querySelector("#tabela tbody");
+  const pacientes = {
+    "Darlylson do Socorro Brito dos Santos": "1972-12-07",
+    "Daniel Souza dos Santos": "2014-02-28"
+  };
 
-  <div class="card">
-    <h2>Selecionar Paciente</h2>
-    <label>Paciente:
-      <select id="paciente-select" onchange="preencherPaciente()">
-        <option value="">-- Selecione --</option>
-        <option value="Darlylson do Socorro Brito dos Santos">Darlylson do Socorro Brito dos Santos</option>
-        <option value="Daniel Souza dos Santos">Daniel Souza dos Santos</option>
-      </select>
-    </label>
-    <label>Nome:<input type="text" id="nome" readonly></label>
-    <label>Data de Nascimento:<input type="date" id="nascimento" readonly></label>
-  </div>
+  function preencherPaciente() {
+    const select = document.getElementById("paciente-select");
+    const nome = select.value;
+    document.getElementById("nome").value = nome;
+    document.getElementById("nascimento").value = pacientes[nome] || "";
+    renderizarTabela();
+  }
 
-  <div class="card">
-    <h2>Registrar Vacina</h2>
-    <label>Vacina:<input type="text" id="vacina"></label>
-    <label>Data de Aplicação:<input type="date" id="data"></label>
-    <label>Lote:<input type="text" id="lote"></label>
-    <label>Profissional:<input type="text" id="profissional"></label>
-    <button onclick="adicionarVacina()">Adicionar</button>
-  </div>
+  function carregarDados() {
+    return JSON.parse(localStorage.getItem("vacinas")) || [];
+  }
 
-  <div class="card">
-    <h2>Vacinas Registradas</h2>
-    <table id="tabela">
-      <thead>
-        <tr>
-          <th>Paciente</th>
-          <th>Vacina</th>
-          <th>Data</th>
-          <th>Lote</th>
-          <th>Profissional</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
+  function salvarDados(dados) {
+    localStorage.setItem("vacinas", JSON.stringify(dados));
+  }
 
-  <script>
-    const pacientes = {
-      "Darlylson do Socorro Brito dos Santos": "1972-12-07",
-      "Daniel Souza dos Santos": "2014-02-28"
-    };
+  function adicionarVacina() {
+    const nome = document.getElementById("nome").value;
+    const nascimento = document.getElementById("nascimento").value;
+    const vacina = document.getElementById("vacina").value;
+    const data = document.getElementById("data").value;
+    const lote = document.getElementById("lote").value;
+    const profissional = document.getElementById("profissional").value;
 
-    function preencherPaciente() {
-      const nome = document.getElementById("paciente-select").value;
-      document.getElementById("nome").value = nome;
-      document.getElementById("nascimento").value = pacientes[nome] || "";
+    if (nome && vacina && data && lote && profissional) {
+      const dados = carregarDados();
+      dados.push({ nome, nascimento, vacina, data, lote, profissional });
+      salvarDados(dados);
+      alert("Registro salvo com sucesso.");
+      document.getElementById("vacina").value = "";
+      document.getElementById("data").value = "";
+      document.getElementById("lote").value = "";
+      document.getElementById("profissional").value = "";
+      renderizarTabela();
+    } else {
+      alert("Preencha todos os campos.");
+    }
+  }
+
+  function renderizarTabela() {
+    const dados = carregarDados();
+    const pacienteAtual = document.getElementById("nome").value;
+    tabela.innerHTML = "";
+
+    const filtrados = dados.filter(d => d.nome === pacienteAtual);
+
+    if (filtrados.length === 0) {
+      tabela.innerHTML = "<tr><td colspan='5'>Nenhum registro encontrado.</td></tr>";
+      return;
     }
 
-    async function carregarRegistros() {
-      try {
-        const res = await fetch("registros.json");
-        const dados = await res.json();
-        const tbody = document.querySelector("#tabela tbody");
-        tbody.innerHTML = "";
-        dados.forEach(reg => {
-          tbody.innerHTML += `<tr>
-            <td>${reg.nome}</td>
-            <td>${reg.vacina}</td>
-            <td>${reg.data}</td>
-            <td>${reg.lote}</td>
-            <td>${reg.profissional}</td>
-          </tr>`;
-        });
-      } catch (e) {
-        console.error("Erro ao carregar registros:", e);
-      }
-    }
+    filtrados.forEach(item => {
+      const row = `<tr>
+        <td>${item.nome}</td>
+        <td>${item.vacina}</td>
+        <td>${item.data}</td>
+        <td>${item.lote}</td>
+        <td>${item.profissional}</td>
+      </tr>`;
+      tabela.innerHTML += row;
+    });
+  }
 
-    async function adicionarVacina() {
-      const registro = {
-        nome: document.getElementById("nome").value,
-        nascimento: document.getElementById("nascimento").value,
-        vacina: document.getElementById("vacina").value,
-        data: document.getElementById("data").value,
-        lote: document.getElementById("lote").value,
-        profissional: document.getElementById("profissional").value,
-      };
-
-      if (!registro.nome || !registro.vacina || !registro.data || !registro.lote || !registro.profissional) {
-        alert("Preencha todos os campos!");
-        return;
-      }
-
-      const res = await fetch("salvar.php", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(registro)
-      });
-
-      if (res.ok) {
-        alert("Registro salvo com sucesso!");
-        carregarRegistros();
-      } else {
-        alert("Erro ao salvar.");
-      }
-    }
-
-    window.onload = carregarRegistros;
-  </script>
-</body>
-</html>
+  window.onload = renderizarTabela;
+</script>
